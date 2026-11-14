@@ -79,6 +79,34 @@ public class AudioPlayerService: NSObject, ObservableObject, AVAudioPlayerDelega
         stopTimer()
     }
 
+    public func stopAudio() {
+        stop()
+    }
+
+    public var speedLabel: String {
+        return String(format: "%.1fx", playbackRate)
+    }
+
+    public var currentProgress: Double {
+        guard duration > 0 else { return 0 }
+        return min(1.0, max(0.0, currentTime / duration))
+    }
+
+    public func toggleSpeed() {
+        if playbackRate == 1.0 {
+            setRate(1.5)
+        } else if playbackRate == 1.5 {
+            setRate(2.0)
+        } else {
+            setRate(1.0)
+        }
+    }
+
+    public func skip(seconds: TimeInterval) {
+        let newTime = max(0, min(duration, currentTime + seconds))
+        seek(to: newTime)
+    }
+
     public func seek(to time: TimeInterval) {
         audioPlayer?.currentTime = time
         currentTime = time
