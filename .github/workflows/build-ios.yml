@@ -19,44 +19,44 @@ jobs:
           swift --version
           xcrun --sdk iphoneos --show-sdk-path
 
-      - name: Compile and Package WorkNote IPA
+      - name: Build WorkNote iOS App with Xcode
         run: |
-          export SDKROOT=$(xcrun --sdk iphoneos --show-sdk-path)
-          echo "Using iPhoneOS SDKROOT: $SDKROOT"
-          
           mkdir -p dist/Payload
-
-          # 1. Try xcodebuild archive
-          if xcodebuild -scheme WorkNote -destination "generic/platform=iOS" -configuration Release archive -archivePath build/WorkNote.xcarchive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" ; then
-            echo "xcodebuild archive succeeded!"
-            cp -r build/WorkNote.xcarchive/Products/Applications/WorkNote.app dist/Payload/
-          else
-            echo "Fallback: Compiling via swift build with iPhoneOS SDK..."
-            swift build -c release \
-              --triple arm64-apple-ios17.0 \
-              -Xswiftc -sdk -Xswiftc "$SDKROOT" \
-              -Xcc -isysroot -Xcc "$SDKROOT"
-            
-            BIN_PATH=$(find .build -name "WorkNote" -type f -perm +111 | grep -v "macosx" | head -n 1)
-            if [ -z "$BIN_PATH" ]; then
-              BIN_PATH=$(find .build -name "VoiceTodo" -type f -perm +111 | grep -v "macosx" | head -n 1)
-            fi
-            echo "Found binary at: $BIN_PATH"
-            
-            mkdir -p dist/Payload/WorkNote.app
-            cp "$BIN_PATH" dist/Payload/WorkNote.app/WorkNote
-            cp Support/Info.plist dist/Payload/WorkNote.app/Info.plist
-            cp Support/AppIcon.png dist/Payload/WorkNote.app/AppIcon.png 2>/dev/null || true
-            cp Support/worknote_logo.png dist/Payload/WorkNote.app/worknote_logo.png 2>/dev/null || true
+          
+          # Compile via xcodebuild for generic iOS device (Release)
+          xcodebuild build \
+            -scheme WorkNote \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+          
+          # Locate built app bundle
+          APP_PATH=$(find build/DerivedData -name "*.app" -type d | head -n 1)
+          echo "Found built app bundle at: $APP_PATH"
+          
+          if [ -z "$APP_PATH" ]; then
+            echo "Failed to locate .app bundle. Output directory structure:"
+            find build -maxdepth 4
+            exit 1
           fi
+          
+          cp -R "$APP_PATH" dist/Payload/WorkNote.app
+          
+          # Inject App Icon & Assets if needed
+          cp Support/Info.plist dist/Payload/WorkNote.app/Info.plist
+          cp Support/AppIcon.png dist/Payload/WorkNote.app/AppIcon.png 2>/dev/null || true
+          cp Support/worknote_logo.png dist/Payload/WorkNote.app/worknote_logo.png 2>/dev/null || true
 
-          # 2. Ad-hoc sign bundle for sideloading
+          # Ad-hoc sign for Sideloadly / AltStore
           codesign --force --deep --sign - dist/Payload/WorkNote.app
 
-          # 3. Zip into .ipa
+          # Package into IPA
           cd dist
           zip -r -y WorkNote.ipa Payload
-          echo "WorkNote.ipa created successfully!"
+          echo "Successfully created WorkNote.ipa!"
           ls -lh WorkNote.ipa
 
       - name: Upload WorkNote IPA

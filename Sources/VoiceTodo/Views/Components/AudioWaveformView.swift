@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 public struct AudioWaveformView: View {
     let levels: [CGFloat]
