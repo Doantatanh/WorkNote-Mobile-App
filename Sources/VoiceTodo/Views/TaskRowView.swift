@@ -26,29 +26,29 @@ public struct TaskRowView: View {
 
     public var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 // Top Meta Header: Code, Priority, Category
                 HStack(alignment: .center, spacing: 6) {
                     Text(task.code)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(4)
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(red: 0.35, green: 0.38, blue: 0.44))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color(red: 0.94, green: 0.95, blue: 0.97))
+                        .cornerRadius(6)
 
                     // Category
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Image(systemName: task.category.icon)
                             .font(.system(size: 9))
                         Text(task.category.rawValue)
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 10, weight: .semibold))
                     }
                     .foregroundColor(task.category.color)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
                     .background(task.category.color.opacity(0.12))
-                    .cornerRadius(4)
+                    .cornerRadius(6)
 
                     Spacer()
 
@@ -57,21 +57,31 @@ public struct TaskRowView: View {
                         Image(systemName: task.priority.icon)
                             .font(.system(size: 9))
                         Text(task.priority.rawValue)
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.system(size: 10, weight: .bold))
                     }
                     .foregroundColor(task.priority.color)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
                     .background(task.priority.color.opacity(0.12))
-                    .cornerRadius(4)
+                    .cornerRadius(6)
                 }
 
                 // Middle: Checkbox + Title
-                HStack(alignment: .top, spacing: 10) {
+                HStack(alignment: .top, spacing: 12) {
                     Button(action: onToggle) {
-                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 19, weight: .medium))
-                            .foregroundColor(task.isCompleted ? Color.green : Color.secondary.opacity(0.6))
+                        ZStack {
+                            Circle()
+                                .stroke(task.isCompleted ? Color.green : Color(red: 0.8, green: 0.82, blue: 0.86), lineWidth: 2)
+                                .frame(width: 22, height: 22)
+                            if task.isCompleted {
+                                Circle()
+                                    .fill(Color.green)
+                                    .frame(width: 22, height: 22)
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .padding(.top, 1)
@@ -79,14 +89,14 @@ public struct TaskRowView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(task.title)
                             .font(.system(size: 15, weight: .semibold))
-                            .strikethrough(task.isCompleted, color: .gray)
-                            .foregroundColor(task.isCompleted ? .secondary : .primary)
+                            .strikethrough(task.isCompleted, color: Color(red: 0.65, green: 0.68, blue: 0.72))
+                            .foregroundColor(task.isCompleted ? Color(red: 0.6, green: 0.62, blue: 0.66) : Color(red: 0.1, green: 0.12, blue: 0.15))
                             .lineLimit(2)
 
                         if !task.note.isEmpty {
                             Text(task.note)
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(red: 0.45, green: 0.48, blue: 0.54))
                                 .lineLimit(2)
                         }
                     }
@@ -98,28 +108,32 @@ public struct TaskRowView: View {
                         Button(action: {
                             player.playAudio(fileName: audioFileName)
                         }) {
-                            HStack(spacing: 5) {
+                            HStack(spacing: 6) {
                                 Image(systemName: isCurrentlyPlayingThisAudio ? "pause.fill" : "play.fill")
-                                    .font(.system(size: 9, weight: .bold))
+                                    .font(.system(size: 10, weight: .bold))
                                 Text(isCurrentlyPlayingThisAudio ? "Đang phát..." : formatDuration(task.audioDuration))
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
                             }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(isCurrentlyPlayingThisAudio ? Color.blue : Color.blue.opacity(0.12))
-                            .foregroundColor(isCurrentlyPlayingThisAudio ? .white : Color.blue)
-                            .cornerRadius(6)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                isCurrentlyPlayingThisAudio
+                                ? LinearGradient(colors: [Color.orange, Color(red: 0.95, green: 0.45, blue: 0.1)], startPoint: .leading, endPoint: .trailing)
+                                : LinearGradient(colors: [Color(red: 0.98, green: 0.94, blue: 0.9), Color(red: 0.98, green: 0.94, blue: 0.9)], startPoint: .leading, endPoint: .trailing)
+                            )
+                            .foregroundColor(isCurrentlyPlayingThisAudio ? .white : Color.orange)
+                            .cornerRadius(8)
                         }
                         .buttonStyle(PlainButtonStyle())
 
                         if let transcript = task.transcribedText, !transcript.isEmpty {
-                            HStack(spacing: 3) {
+                            HStack(spacing: 4) {
                                 Image(systemName: "sparkles")
                                     .font(.system(size: 9))
                                     .foregroundColor(.purple)
                                 Text("Biên bản AI")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(Color(red: 0.45, green: 0.48, blue: 0.54))
                             }
                         }
 
@@ -131,29 +145,36 @@ public struct TaskRowView: View {
                 // Bottom Meta: Assignee + Due Date
                 HStack(spacing: 12) {
                     HStack(spacing: 4) {
-                        Image(systemName: "person.crop.circle")
-                            .font(.system(size: 11))
+                        Image(systemName: "person.crop.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 0.65, green: 0.68, blue: 0.72))
                         Text(task.assignee)
-                            .font(.system(size: 11))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Color(red: 0.45, green: 0.48, blue: 0.54))
                     }
-                    .foregroundColor(.secondary)
 
                     Spacer()
 
                     if let dueDate = task.dueDate {
-                        HStack(spacing: 3) {
-                            Image(systemName: "clock")
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.fill")
                                 .font(.system(size: 10))
                             Text(formatDueDate(dueDate))
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 11, weight: .semibold))
                         }
-                        .foregroundColor(dueDate < Date() && !task.isCompleted ? Color.red : Color.secondary)
+                        .foregroundColor(dueDate < Date() && !task.isCompleted ? Color.red : Color(red: 0.5, green: 0.53, blue: 0.58))
                     }
                 }
                 .padding(.top, 2)
             }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
+            .padding(14)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 3)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(red: 0.92, green: 0.94, blue: 0.96), lineWidth: 1)
+            )
         }
         .buttonStyle(PlainButtonStyle())
     }

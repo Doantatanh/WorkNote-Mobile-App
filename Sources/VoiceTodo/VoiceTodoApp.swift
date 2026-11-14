@@ -7,6 +7,7 @@ public struct VoiceTodoApp: App {
     public var body: some Scene {
         WindowGroup {
             MainTaskListView()
+                .preferredColorScheme(.light)
         }
     }
 }
