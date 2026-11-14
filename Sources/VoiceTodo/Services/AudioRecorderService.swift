@@ -53,7 +53,7 @@ public class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDe
     public func startRecording() -> Bool {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
             try audioSession.setActive(true)
         } catch {
             self.errorMessage = "Không thể khởi động Microphone: \(error.localizedDescription)"

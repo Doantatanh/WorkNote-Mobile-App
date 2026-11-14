@@ -40,7 +40,7 @@ public struct AuthView: View {
 
                     VStack(spacing: 4) {
                         Text("WorkNote Cloud")
-                            .font(.system(size: 24, weight: .extrabold))
+                            .font(.system(size: 24, weight: .heavy))
                             .foregroundColor(.primary)
 
                         Text(isSignUpMode ? "Tạo tài khoản Supabase miễn phí để đồng bộ đám mây" : "Đăng nhập để đồng bộ công việc & bản ghi âm")
