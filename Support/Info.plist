@@ -7,13 +7,13 @@
     <key>CFBundleDisplayName</key>
     <string>WorkNote</string>
     <key>CFBundleExecutable</key>
-    <string>VoiceTodo</string>
+    <string>WorkNote</string>
     <key>CFBundleIdentifier</key>
-    <string>com.local.voicetodo</string>
+    <string>com.worknote.app</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>VoiceTodo</string>
+    <string>WorkNote</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

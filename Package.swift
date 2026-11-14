@@ -2,11 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoiceTodo",
+    name: "WorkNote",
     platforms: [
         .iOS(.v17)
     ],
     products: [
+        .executable(
+            name: "WorkNote",
+            targets: ["VoiceTodo"]
+        ),
         .library(
             name: "VoiceTodo",
             targets: ["VoiceTodo"]
@@ -14,7 +18,7 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
-        .target(
+        .executableTarget(
             name: "VoiceTodo",
             dependencies: [],
             path: "Sources/VoiceTodo"
