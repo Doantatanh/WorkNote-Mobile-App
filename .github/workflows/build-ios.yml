@@ -17,38 +17,47 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
-          echo "SDK path: $(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun --sdk iphoneos --show-sdk-path
 
-      - name: Compile WorkNote ARM64 for iOS
+      - name: Compile and Package WorkNote IPA
         run: |
-          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-          swift build -c release \
-            --triple arm64-apple-ios17.0 \
-            -Xswiftc -sdk -Xswiftc "$SDK_PATH"
-
-      - name: Assemble and Package IPA
-        run: |
-          mkdir -p Payload/WorkNote.app
+          export SDKROOT=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "Using iPhoneOS SDKROOT: $SDKROOT"
           
-          # Find the compiled binary
-          BIN_PATH=$(find .build -name "WorkNote" -type f -perm +111 | grep -v "macosx" | head -n 1)
-          if [ -z "$BIN_PATH" ]; then
-            BIN_PATH=$(find .build -name "VoiceTodo" -type f -perm +111 | grep -v "macosx" | head -n 1)
+          mkdir -p dist/Payload
+
+          # 1. Try xcodebuild archive
+          if xcodebuild -scheme WorkNote -destination "generic/platform=iOS" -configuration Release archive -archivePath build/WorkNote.xcarchive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" ; then
+            echo "xcodebuild archive succeeded!"
+            cp -r build/WorkNote.xcarchive/Products/Applications/WorkNote.app dist/Payload/
+          else
+            echo "Fallback: Compiling via swift build with iPhoneOS SDK..."
+            swift build -c release \
+              --triple arm64-apple-ios17.0 \
+              -Xswiftc -sdk -Xswiftc "$SDKROOT" \
+              -Xcc -isysroot -Xcc "$SDKROOT"
+            
+            BIN_PATH=$(find .build -name "WorkNote" -type f -perm +111 | grep -v "macosx" | head -n 1)
+            if [ -z "$BIN_PATH" ]; then
+              BIN_PATH=$(find .build -name "VoiceTodo" -type f -perm +111 | grep -v "macosx" | head -n 1)
+            fi
+            echo "Found binary at: $BIN_PATH"
+            
+            mkdir -p dist/Payload/WorkNote.app
+            cp "$BIN_PATH" dist/Payload/WorkNote.app/WorkNote
+            cp Support/Info.plist dist/Payload/WorkNote.app/Info.plist
+            cp Support/AppIcon.png dist/Payload/WorkNote.app/AppIcon.png 2>/dev/null || true
+            cp Support/worknote_logo.png dist/Payload/WorkNote.app/worknote_logo.png 2>/dev/null || true
           fi
-          echo "Found binary at: $BIN_PATH"
-          
-          cp "$BIN_PATH" Payload/WorkNote.app/WorkNote
-          cp Support/Info.plist Payload/WorkNote.app/Info.plist
-          cp Support/AppIcon.png Payload/WorkNote.app/AppIcon.png 2>/dev/null || true
-          cp Support/worknote_logo.png Payload/WorkNote.app/worknote_logo.png 2>/dev/null || true
-          
-          # Ad-hoc sign for Sideloadly / AltStore
-          codesign --force --deep --sign - Payload/WorkNote.app
-          
-          mkdir -p dist
-          zip -r -y dist/WorkNote.ipa Payload
-          echo "Successfully created dist/WorkNote.ipa!"
-          ls -la dist/WorkNote.ipa
+
+          # 2. Ad-hoc sign bundle for sideloading
+          codesign --force --deep --sign - dist/Payload/WorkNote.app
+
+          # 3. Zip into .ipa
+          cd dist
+          zip -r -y WorkNote.ipa Payload
+          echo "WorkNote.ipa created successfully!"
+          ls -lh WorkNote.ipa
 
       - name: Upload WorkNote IPA
         uses: actions/upload-artifact@v4
