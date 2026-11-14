@@ -13,16 +13,16 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: Verify Xcode Environment
         run: |
-          sudo xcode-select -switch /Applications/Xcode_15.4.app
           xcodebuild -version
 
       - name: Install xtool
         run: |
           curl -fL "https://github.com/xtool-org/xtool/releases/download/1.24.0/xtool.app.zip" -o xtool.zip
           unzip -q xtool.zip
-          sudo cp -R xtool.app/Contents/MacOS/xtool /usr/local/bin/xtool
+          sudo cp -R xtool.app /Applications/
+          sudo ln -sf /Applications/xtool.app/Contents/MacOS/xtool /usr/local/bin/xtool
           chmod +x /usr/local/bin/xtool
           xtool --help
 
