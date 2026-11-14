@@ -39,31 +39,45 @@ jobs:
               exit 1
             }
           
-          # Locate built app bundle
-          APP_PATH=$(find build/DerivedData -name "*.app" -type d | head -n 1)
-          echo "Found built app bundle at: $APP_PATH"
+          # Locate built app bundle or compiled binary
+          mkdir -p dist/Payload/WorkNote.app
           
-          if [ -z "$APP_PATH" ]; then
-            echo "Failed to locate .app bundle. Output directory structure:"
-            find build -maxdepth 4
-            exit 1
+          APP_PATH=$(find build/DerivedData -name "*.app" -type d | head -n 1)
+          
+          if [ -n "$APP_PATH" ]; then
+            echo "Found .app bundle at: $APP_PATH"
+            cp -R "$APP_PATH/"* dist/Payload/WorkNote.app/
+          else
+            echo "No .app wrapper created by SwiftPM; locating compiled WorkNote binary..."
+            BIN_PATH=$(find build/DerivedData/Build/Products -name "WorkNote" -type f ! -name "*.d" ! -name "*.dia" ! -name "*.o" | head -n 1)
+            
+            if [ -z "$BIN_PATH" ]; then
+              echo "Binary not found. Listing all files in DerivedData:"
+              find build/DerivedData -type f
+              exit 1
+            fi
+            
+            echo "Found compiled binary at: $BIN_PATH"
+            cp "$BIN_PATH" dist/Payload/WorkNote.app/WorkNote
+            chmod +x dist/Payload/WorkNote.app/WorkNote
           fi
           
-          cp -R "$APP_PATH" dist/Payload/WorkNote.app
-          
-          # Inject App Icon & Assets if needed
+          # Inject App Info & Icons
           cp Support/Info.plist dist/Payload/WorkNote.app/Info.plist
+          echo -n "APPL????" > dist/Payload/WorkNote.app/PkgInfo
           cp Support/AppIcon.png dist/Payload/WorkNote.app/AppIcon.png 2>/dev/null || true
+          cp Support/AppIcon.png dist/Payload/WorkNote.app/AppIcon60x60@2x.png 2>/dev/null || true
           cp Support/worknote_logo.png dist/Payload/WorkNote.app/worknote_logo.png 2>/dev/null || true
 
-          # Ad-hoc sign for Sideloadly / AltStore
+          # Ad-hoc sign for Sideloadly / AltStore / iOS
+          echo "Signing WorkNote.app..."
           codesign --force --deep --sign - dist/Payload/WorkNote.app
 
           # Package into IPA
-          cd dist
-          zip -r -y WorkNote.ipa Payload
-          echo "Successfully created WorkNote.ipa!"
-          ls -lh WorkNote.ipa
+          echo "Packaging WorkNote.ipa..."
+          (cd dist && zip -r -y WorkNote.ipa Payload)
+          echo "=== Successfully created WorkNote.ipa! ==="
+          ls -lh dist/WorkNote.ipa
 
       - name: Upload WorkNote IPA
         uses: actions/upload-artifact@v4
