@@ -10,10 +10,6 @@ let package = Package(
         .executable(
             name: "WorkNote",
             targets: ["VoiceTodo"]
-        ),
-        .library(
-            name: "VoiceTodo",
-            targets: ["VoiceTodo"]
         )
     ],
     dependencies: [],
