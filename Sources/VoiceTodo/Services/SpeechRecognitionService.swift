@@ -79,6 +79,14 @@ public class SpeechRecognitionService: ObservableObject {
         }
     }
 
+    public func startTranscribing() {
+        startLiveTranscription()
+    }
+
+    public func stopTranscribing() {
+        stopTranscription()
+    }
+
     public func stopTranscription() {
         if audioEngine.isRunning {
             audioEngine.stop()

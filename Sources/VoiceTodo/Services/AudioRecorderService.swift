@@ -49,6 +49,7 @@ public class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDe
         }
     }
 
+    @discardableResult
     public func startRecording() -> Bool {
         let audioSession = AVAudioSession.sharedInstance()
         do {

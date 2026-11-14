@@ -24,6 +24,7 @@ jobs:
           mkdir -p dist/Payload
           
           # Compile via xcodebuild for generic iOS device (Release)
+          set -o pipefail
           xcodebuild build \
             -scheme WorkNote \
             -destination "generic/platform=iOS" \
@@ -31,7 +32,12 @@ jobs:
             -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY=""
+            CODE_SIGN_IDENTITY="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES 2>&1 | tee xcode_build.log || {
+              echo "=== BUILD FAILED: PRINTING ERROR LOGS ==="
+              grep -E -C 3 -i "error:|fatal error:" xcode_build.log | tail -n 60
+              exit 1
+            }
           
           # Locate built app bundle
           APP_PATH=$(find build/DerivedData -name "*.app" -type d | head -n 1)
