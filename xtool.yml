@@ -1,0 +1,4 @@
+version: 1
+bundleID: com.worknote.app
+product: WorkNote
+infoPath: Support/Info.plist

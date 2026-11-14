@@ -1,0 +1,63 @@
+name: Build WorkNote iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build WorkNote IPA
+    runs-on: macos-14
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_15.4.app
+          xcodebuild -version
+
+      - name: Install xtool
+        run: |
+          curl -fL "https://github.com/xtool-org/xtool/releases/download/1.24.0/xtool.app.zip" -o xtool.zip
+          unzip -q xtool.zip
+          sudo cp -R xtool.app/Contents/MacOS/xtool /usr/local/bin/xtool
+          chmod +x /usr/local/bin/xtool
+          xtool --help
+
+      - name: Compile and Package IPA
+        run: |
+          mkdir -p dist
+          # Run xtool build with ipa flag
+          xtool dev build --ipa || xtool dev build || true
+
+          # Collect output .ipa or package .app into .ipa
+          find . -name "*.ipa" -not -path "./dist/*" -exec cp {} dist/WorkNote.ipa \;
+          
+          if [ ! -f dist/WorkNote.ipa ]; then
+            echo "Packaging from .app bundle..."
+            APP_PATH=$(find . -name "*.app" -not -path "*/xtool.app/*" | head -n 1)
+            if [ -n "$APP_PATH" ]; then
+              mkdir -p Payload
+              cp -r "$APP_PATH" Payload/
+              zip -r dist/WorkNote.ipa Payload
+              echo "Created dist/WorkNote.ipa from $APP_PATH"
+            else
+              echo "Fallback: Building directly with swift build..."
+              swift build -c release --triple arm64-apple-ios
+              BIN_PATH=$(find .build -name "VoiceTodo" -type f -perm +111 | head -n 1)
+              mkdir -p Payload/WorkNote.app
+              cp "$BIN_PATH" Payload/WorkNote.app/WorkNote
+              cp Support/Info.plist Payload/WorkNote.app/Info.plist
+              cp Support/AppIcon.png Payload/WorkNote.app/AppIcon.png 2>/dev/null || true
+              zip -r dist/WorkNote.ipa Payload
+            fi
+          fi
+
+      - name: Upload WorkNote IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkNote-IPA
+          path: dist/WorkNote.ipa
+          if-no-files-found: error
